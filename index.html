@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Aircraft Safety Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background:#0b0f1a; color:white; font-family:Arial; }
+    h1 { text-align:center; color:#00e5ff; }
+
+    .alert {
+      padding:15px;
+      margin:10px;
+      font-size:20px;
+      display:none;
+      border-radius:8px;
+    }
+
+    .danger { background:#ff1744; }
+    .warning { background:#ff9100; }
+
+    canvas {
+      background:#111;
+      margin-top:20px;
+      border-radius:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>✈️ Cabin Safety Monitoring</h1>
+
+<div id="flame" class="alert danger">🔥 FLAME DETECTED</div>
+<div id="vibration" class="alert warning">⚠️ VIBRATION DETECTED</div>
+<div id="oxygen" class="alert danger">😮‍💨 OXYGEN MASK REQUIRED</div>
+<div id="depress" class="alert warning">⚠️ CABIN DEPRESSURIZATION</div>
+
+<canvas id="gasChart"></canvas>
+<canvas id="pressureChart"></canvas>
+
+<script>
+let gasData = [];
+let pressureData = [];
+let labels = [];
+
+const gasChart = new Chart(document.getElementById("gasChart"), {
+  type: "line",
+  data: {
+    labels,
+    datasets: [{
+      label: "Gas Sensor ADC",
+      data: gasData,
+      borderColor: "#00e5ff",
+      tension: 0.3
+    }]
+  }
+});
+
+const pressureChart = new Chart(document.getElementById("pressureChart"), {
+  type: "line",
+  data: {
+    labels,
+    datasets: [{
+      label: "Cabin Pressure (1=Normal, 0=Depressurized)",
+      data: pressureData,
+      borderColor: "#76ff03",
+      tension: 0.3
+    }]
+  }
+});
+
+function updateUI(data) {
+
+  document.getElementById("flame").style.display =
+    data.flame === 1 ? "block" : "none";
+
+  document.getElementById("vibration").style.display =
+    data.vibration === 1 ? "block" : "none";
+
+  document.getElementById("oxygen").style.display =
+    data.oxygen === 1 ? "block" : "none";
+
+  document.getElementById("depress").style.display =
+    data.depress === 1 ? "block" : "none";
+
+  if (gasData.length > 60) {
+    gasData.shift();
+    pressureData.shift();
+    labels.shift();
+  }
+
+  gasData.push(data.gas);
+  pressureData.push(data.pressure);
+  labels.push("");
+
+  gasChart.update();
+  pressureChart.update();
+}
+
+setInterval(() => {
+  fetch("/data")
+    .then(res => res.json())
+    .then(updateUI);
+}, 1000);
+</script>
+
+</body>
+</html>
