@@ -1,0 +1,46 @@
+int flamePin = 7;
+int gasPin = A2;
+int vibrationPin = 8;
+int pressurePin = A0;
+
+
+int lastGasADC = 0;
+
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(flamePin, INPUT);
+  pinMode(vibrationPin, INPUT);
+}
+
+
+void loop() {
+
+  int flame = (digitalRead(flamePin) == LOW) ? 1 : 0;
+  int vibration = (digitalRead(vibrationPin) == HIGH) ? 1 : 0;
+
+  int gasADC = analogRead(gasPin);
+  int pressureRaw = analogRead(pressurePin);
+
+
+  int touch = (pressureRaw > 100) ? 1 : 0;   
+  int pressureState = touch;                 
+  int depressAlert  = touch ? 0 : 1;         
+
+  int deltaGas = lastGasADC - gasADC;
+  lastGasADC = gasADC;
+
+  int oxygenAlert = (deltaGas > 15) ? 1 : 0;  // breath detection ONLY
+
+
+  Serial.print(flame);          Serial.print(",");
+  Serial.print(gasADC);         Serial.print(",");
+  Serial.print(vibration);      Serial.print(",");
+  Serial.print(pressureState);  Serial.print(",");
+  Serial.print(oxygenAlert);    Serial.print(",");
+  Serial.println(depressAlert);
+
+  delay(500);
+}
+
